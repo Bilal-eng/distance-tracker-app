@@ -106,9 +106,9 @@ class TrackerService : LifecycleService() {
         val locationRequest = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,
             LOCATION_UPDATE_INTERVAL
-        )
-            .setMinUpdateIntervalMillis(LOCATION_FASTEST_UPDATE_INTERNAL)
-            .build()
+        ).apply {
+            setMinUpdateIntervalMillis(LOCATION_FASTEST_UPDATE_INTERNAL)
+        }.build()
 
 
         fusedLocationProviderClient.requestLocationUpdates(
