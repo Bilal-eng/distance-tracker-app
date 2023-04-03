@@ -1,9 +1,10 @@
-package com.example.distancetrackerapp
+package com.example.distancetrackerapp.ui
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
+import com.example.distancetrackerapp.R
 import com.example.distancetrackerapp.util.Permissions.hasLocationPermission
 
 class MainActivity : AppCompatActivity() {
