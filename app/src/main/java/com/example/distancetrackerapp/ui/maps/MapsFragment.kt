@@ -13,9 +13,13 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.example.distancetrackerapp.R
 import com.example.distancetrackerapp.databinding.FragmentMapsBinding
+import com.example.distancetrackerapp.model.Result
 import com.example.distancetrackerapp.service.TrackerService
+import com.example.distancetrackerapp.ui.maps.MapUtil.calculateElapsedTime
+import com.example.distancetrackerapp.ui.maps.MapUtil.calculateTheDistance
 import com.example.distancetrackerapp.ui.maps.MapUtil.setCameraPosition
 import com.example.distancetrackerapp.util.Constants.ACTION_SERVICE_START
 import com.example.distancetrackerapp.util.Constants.ACTION_SERVICE_STOP
@@ -117,6 +121,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMyLocationButto
             stopTime = it
             if (stopTime != 0L) {
                 showBiggerPicture()
+                displayResult()
             }
         }
     }
@@ -221,6 +226,23 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMyLocationButto
         )
     }
 
+    private fun displayResult() {
+        val result = Result(
+            calculateTheDistance(locationList),
+            calculateElapsedTime(startTime, stopTime)
+        )
+        lifecycleScope.launch {
+            delay(2500)
+            val directions = MapsFragmentDirections.actionMapsFragmentToResultFragment(result)
+            findNavController().navigate(directions)
+            binding.startButton.apply {
+                hide()
+                enable()
+            }
+            binding.stopButton.hide()
+            binding.resetButton.show()
+        }
+    }
 
     override fun onMyLocationButtonClick(): Boolean {
         binding.hintTextView.animate().alpha(0f).duration = 1500
