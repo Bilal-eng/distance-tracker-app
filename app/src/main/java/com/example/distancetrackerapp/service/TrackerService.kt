@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.NotificationManager.IMPORTANCE_LOW
+import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Build
@@ -42,11 +43,15 @@ class TrackerService : LifecycleService() {
 
     companion object {
         val started = MutableLiveData<Boolean>()
+        val startTime = MutableLiveData<Long>()
+        val stopTime = MutableLiveData<Long>()
         val locationList = MutableLiveData<MutableList<LatLng>>()
     }
 
     private fun setInitialsValues() {
         started.postValue(false)
+        startTime.postValue(0L)
+        stopTime.postValue(0L)
         locationList.postValue(mutableListOf())
     }
 
@@ -86,6 +91,7 @@ class TrackerService : LifecycleService() {
 
                 ACTION_SERVICE_STOP -> {
                     started.postValue(false)
+                    stopForegroundService()
                 }
 
                 else -> {
@@ -99,6 +105,22 @@ class TrackerService : LifecycleService() {
     private fun startForegroundService() {
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, notification.build())
+    }
+
+    private fun stopForegroundService() {
+        removeLocationUpdates()
+        (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).cancel(
+            NOTIFICATION_ID
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        }
+        stopSelf()
+        stopTime.postValue(System.currentTimeMillis())
+    }
+
+    private fun removeLocationUpdates() {
+        fusedLocationProviderClient.removeLocationUpdates(locationCallback)
     }
 
     @SuppressLint("MissingPermission")
@@ -116,6 +138,7 @@ class TrackerService : LifecycleService() {
             locationCallback,
             Looper.getMainLooper()
         )
+        startTime.postValue(System.currentTimeMillis())
     }
 
     private fun createNotificationChannel() {
