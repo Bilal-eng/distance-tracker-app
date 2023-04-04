@@ -1,18 +1,18 @@
 package com.example.distancetrackerapp.service
 
-import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.NotificationManager.IMPORTANCE_LOW
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Build
 import android.os.Looper
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.MutableLiveData
+import com.example.distancetrackerapp.ui.maps.MapUtil.calculateTheDistance
 import com.example.distancetrackerapp.util.Constants.ACTION_SERVICE_START
 import com.example.distancetrackerapp.util.Constants.ACTION_SERVICE_STOP
 import com.example.distancetrackerapp.util.Constants.LOCATION_FASTEST_UPDATE_INTERNAL
@@ -61,6 +61,7 @@ class TrackerService : LifecycleService() {
             result.locations.let { locations ->
                 for (location in locations) {
                     updateLocationList(location)
+                    updateNotificationPeriodically()
                 }
             }
         }
@@ -126,27 +127,30 @@ class TrackerService : LifecycleService() {
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
         val locationRequest = LocationRequest.Builder(
-            Priority.PRIORITY_HIGH_ACCURACY,
-            LOCATION_UPDATE_INTERVAL
+            Priority.PRIORITY_HIGH_ACCURACY, LOCATION_UPDATE_INTERVAL
         ).apply {
             setMinUpdateIntervalMillis(LOCATION_FASTEST_UPDATE_INTERNAL)
         }.build()
 
 
         fusedLocationProviderClient.requestLocationUpdates(
-            locationRequest,
-            locationCallback,
-            Looper.getMainLooper()
+            locationRequest, locationCallback, Looper.getMainLooper()
         )
         startTime.postValue(System.currentTimeMillis())
+    }
+
+    private fun updateNotificationPeriodically() {
+        notification.apply {
+            setContentTitle("Distance Travelled")
+            setContentText(locationList.value?.let { calculateTheDistance(it) } + "km")
+        }
+        notificationManager.notify(NOTIFICATION_ID, notification.build())
     }
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                NOTIFICATION_CHANNEL_ID,
-                NOTIFICATION_CHANNEL_NAME,
-                IMPORTANCE_LOW
+                NOTIFICATION_CHANNEL_ID, NOTIFICATION_CHANNEL_NAME, IMPORTANCE_LOW
             )
             notificationManager.createNotificationChannel(channel)
         }
