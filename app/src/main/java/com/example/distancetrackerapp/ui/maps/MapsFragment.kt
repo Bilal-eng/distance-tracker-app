@@ -29,6 +29,8 @@ import com.example.distancetrackerapp.util.ExtensionFunctions.hide
 import com.example.distancetrackerapp.util.ExtensionFunctions.show
 import com.example.distancetrackerapp.util.Permissions.hasBackgroundLocationPermission
 import com.example.distancetrackerapp.util.Permissions.requestBackgroundLocationPermission
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -37,6 +39,7 @@ import com.google.android.gms.maps.model.ButtCap
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.vmadalin.easypermissions.EasyPermissions
 import com.vmadalin.easypermissions.dialogs.SettingsDialog
@@ -57,6 +60,9 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMyLocationButto
     private var stopTime = 0L
 
     private var locationList = mutableListOf<LatLng>()
+    private var polylineList = mutableListOf<Polyline>()
+
+    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -73,7 +79,12 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMyLocationButto
         binding.stopButton.setOnClickListener {
             onStopButtonClicked()
         }
-        binding.resetButton.setOnClickListener { }
+        binding.resetButton.setOnClickListener {
+            onResetButtonClicked()
+        }
+
+        fusedLocationProviderClient =
+            LocationServices.getFusedLocationProviderClient(requireActivity())
 
         return binding.root
     }
@@ -137,6 +148,7 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMyLocationButto
                 addAll(locationList)
             }
         )
+        polylineList.add(polyline)
     }
 
     private fun followPolyline() {
@@ -164,6 +176,10 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMyLocationButto
         stopForegroundService()
         binding.stopButton.hide()
         binding.startButton.show()
+    }
+
+    private fun onResetButtonClicked() {
+        mapReset()
     }
 
     private fun startCountDownTime() {
@@ -241,6 +257,24 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMyLocationButto
             }
             binding.stopButton.hide()
             binding.resetButton.show()
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun mapReset() {
+        fusedLocationProviderClient.lastLocation.addOnCompleteListener {
+            val lastKnownLocation = LatLng(it.result.latitude, it.result.longitude)
+            for (polyLine in polylineList) {
+                polyLine.remove()
+            }
+            map.animateCamera(
+                CameraUpdateFactory.newCameraPosition(
+                    setCameraPosition(lastKnownLocation)
+                )
+            )
+            locationList.clear()
+            binding.resetButton.hide()
+            binding.startButton.show()
         }
     }
 

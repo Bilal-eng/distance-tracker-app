@@ -23,7 +23,7 @@ class ResultFragment : BottomSheetDialogFragment() {
     ): View {
         // Inflate the layout for this fragment
         _binding = FragmentResultBinding.inflate(inflater, container, false)
-        binding.distanceTextView.text = getString(R.string.result, args.result.distance)
+        binding.distanceValueTextView.text = getString(R.string.result, args.result.distance)
         binding.timeValueTextView.text = args.result.time
 
         binding.shareButton.setOnClickListener {
