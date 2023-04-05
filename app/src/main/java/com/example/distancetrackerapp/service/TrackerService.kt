@@ -115,6 +115,8 @@ class TrackerService : LifecycleService() {
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE)
+        } else {
+            stopForeground(true)
         }
         stopSelf()
         stopTime.postValue(System.currentTimeMillis())
@@ -129,6 +131,7 @@ class TrackerService : LifecycleService() {
         val locationRequest = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY, LOCATION_UPDATE_INTERVAL
         ).apply {
+            setWaitForAccurateLocation(false)
             setMinUpdateIntervalMillis(LOCATION_FASTEST_UPDATE_INTERNAL)
         }.build()
 

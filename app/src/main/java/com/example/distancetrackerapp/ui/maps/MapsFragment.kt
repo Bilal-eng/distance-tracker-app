@@ -136,8 +136,10 @@ class MapsFragment : Fragment(), OnMapReadyCallback, GoogleMap.OnMyLocationButto
         TrackerService.stopTime.observe(viewLifecycleOwner) {
             stopTime = it
             if (stopTime != 0L) {
-                showBiggerPicture()
-                displayResult()
+                if (locationList.isNotEmpty()) {
+                    showBiggerPicture()
+                    displayResult()
+                }
             }
         }
     }
